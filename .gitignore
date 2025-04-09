@@ -1,0 +1,37 @@
+# 忽略编译生成的可执行文件
+dist/
+release/
+*.exe
+*.spec
+
+# Python字节码
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 临时文件
+temp/
+temp_*/
+*.tmp
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 虚拟环境
+venv/
+env/
+.env/
+
+# IDE文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 输出文件夹
+成功文件/
+无图片成功文件/
+错误文件/
+字数统计报告/
+提取的图片/
