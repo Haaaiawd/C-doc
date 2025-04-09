@@ -139,6 +139,15 @@ class App:
         format_desc.insert(tk.END, "中文标准格式详情：\n主标题：小二号方正小标宋简体\n副标题：小三号仿宋_GB2312\n正文：小三号仿宋_GB2312\n文内一级标题：黑体小三，二级标题：楷体_GB2312小三，三四级标题：仿宋_GB2312小三")
         format_desc.config(state=tk.DISABLED)  # 设为只读
         
+        # 添加保持图片位置选项
+        self.keep_image_position = tk.BooleanVar(value=True)
+        ttk.Checkbutton(format_frame, text="保持图片在原位置", variable=self.keep_image_position).grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+        
+        # 添加作者信息控制选项
+        self.show_author_info = tk.BooleanVar(value=True)
+        ttk.Checkbutton(format_frame, text="添加作者信息（先进制造学院与海洋学院关工委通讯员）", 
+                         variable=self.show_author_info).grid(row=2, column=1, sticky=tk.W, padx=10, pady=5)
+        
         # 添加字数检测框架
         wordcount_frame = ttk.LabelFrame(main_frame, text="字数检测")
         wordcount_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), padx=5, pady=5)
@@ -299,6 +308,10 @@ class App:
         # 获取格式选择
         use_chinese_format = self.format_var.get() == "chinese"
         
+        # 获取图片位置和作者信息选项
+        keep_image_position = self.keep_image_position.get()
+        show_author_info = self.show_author_info.get()
+        
         # 获取字数检测配置
         wordcount_enabled = self.wordcount_enabled.get()
         min_words = self.min_words.get()
@@ -308,12 +321,13 @@ class App:
         format_info = "中文标准格式" if use_chinese_format else "默认格式"
         self.log_text.insert('end', f"使用{format_info}处理文档\n")
         
-        if wordcount_enabled:
-            self.log_text.insert('end', f"字数检测已启用，最小字数要求: {min_words}字\n")
-            if wordcount_action == "move":
-                self.log_text.insert('end', "字数不足的文件将移至单独文件夹\n")
-            else:
-                self.log_text.insert('end', "字数不足的文件将被标记\n")
+        if not show_author_info:
+            self.log_text.insert('end', "不添加作者信息\n")
+            
+        if keep_image_position:
+            self.log_text.insert('end', "保持图片在原文位置\n")
+        else:
+            self.log_text.insert('end', "所有图片将移至文末\n")
         
         self.log_text.insert('end', "\n开始处理文件...\n\n")
         
@@ -368,11 +382,13 @@ class App:
                         except Exception as e:
                             self.log_text.insert('end', f"! {filename}: 字数检测失败 - {str(e)}\n")
                     
-                    # 根据文件扩展名选择处理方法，传入标题后缀配置和格式选择
+                    # 根据文件扩展名选择处理方法，传入标题后缀配置、格式选择以及新增的选项
                     if filename.lower().endswith('.doc'):
-                        process_doc_file(input_file, output_dir, suffix_enabled, suffix_text, use_chinese_format)
+                        process_doc_file(input_file, output_dir, suffix_enabled, suffix_text, use_chinese_format, 
+                                         keep_image_position, show_author_info)
                     else:  # .docx 文件
-                        process_word_file(input_file, output_dir, suffix_enabled, suffix_text, use_chinese_format)
+                        process_word_file(input_file, output_dir, suffix_enabled, suffix_text, use_chinese_format,
+                                         keep_image_position, show_author_info)
                 
                 # 处理完成后显示统计信息
                 success_count = len(self.redirect.get_success_files())
@@ -743,7 +759,7 @@ class App:
                 
                 for cell in sheet[column]:
                     try:
-                        if len(str(cell.value)) > max_length:
+                        if cell.value and len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except:
                         pass
